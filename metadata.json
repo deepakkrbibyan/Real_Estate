@@ -1,0 +1,7 @@
+{
+  "name": "Krishana Chat Agent",
+  "description": "A high-performance customer support agent named Krishana supporting real-time voice and text messaging with session persistence.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
