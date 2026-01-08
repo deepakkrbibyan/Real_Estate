@@ -100,8 +100,18 @@ export class KrishanaSupabaseDB {
   }
 
   async deleteSession(id: string): Promise<void> {
-    const { error } = await supabase.from('sessions').delete().eq('id', id);
-    if (error) console.error("Supabase Error (deleteSession):", error.message);
+    // Explicitly delete messages first to avoid foreign key violations
+    const { error: mError } = await supabase.from('messages').delete().eq('session_id', id);
+    if (mError) {
+      console.error("Supabase Error (deleteSession - messages):", mError.message);
+      throw mError;
+    }
+
+    const { error: sError } = await supabase.from('sessions').delete().eq('id', id);
+    if (sError) {
+      console.error("Supabase Error (deleteSession - session):", sError.message);
+      throw sError;
+    }
   }
 
   async clearSessionMessages(id: string): Promise<void> {
@@ -114,8 +124,6 @@ export class KrishanaSupabaseDB {
     await supabase.from('messages').delete().neq('id', dummyId);
     await supabase.from('sessions').delete().neq('id', dummyId);
   }
-
-  // --- NEW BUSINESS METHODS ---
 
   async getProperties(): Promise<Property[]> {
     const { data, error } = await supabase
