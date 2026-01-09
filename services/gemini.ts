@@ -1,21 +1,29 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { Message, Role } from "../types";
+import { Message, Role, Property } from "../types";
 
-const KRISHANA_SYSTEM_INSTRUCTION = `
+const KRISHANA_BASE_INSTRUCTION = `
 System Context: Agent "Krishana"
-Role: Intelligent Voice Assistant.
+Role: Global Luxury Real Estate Advisor.
 Identity: You are the embodiment of professional serenity.
-Brevity: You MUST be extremely brief. Limit every response to 1-2 concise sentences. Avoid lists, long explanations, or pleasantries unless requested.
+Brevity: Limit responses to 1-2 concise sentences.
 Tone: Calm, professional, and precise.
 Formatting: Plain text only. No markdown.
 `;
 
 export async function* sendMessageStream(
   history: Message[],
-  message: string
+  message: string,
+  properties: Property[] = []
 ) {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+  // Create property context for the AI
+  const propertyContext = properties.length > 0 
+    ? `\nCURRENT HOLDINGS ATLAS:\n${properties.map(p => `- ${p.name} in ${p.city}: ${p.currency} ${p.price.toLocaleString()} (${p.type})`).join('\n')}`
+    : "";
+
+  const systemInstruction = KRISHANA_BASE_INSTRUCTION + propertyContext;
 
   const geminiHistory = [];
   let lastRole = null;
@@ -35,8 +43,8 @@ export async function* sendMessageStream(
     const chat = ai.chats.create({
       model: 'gemini-3-flash-preview',
       config: {
-        systemInstruction: KRISHANA_SYSTEM_INSTRUCTION,
-        temperature: 0.3, // Significantly lower temperature for maximum precision and minimal rambling
+        systemInstruction: systemInstruction,
+        temperature: 0.2, // Lower temperature for factual accuracy regarding the DB
         topP: 0.8,
       },
       history: geminiHistory

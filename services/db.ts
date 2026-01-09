@@ -6,7 +6,6 @@ export class KrishanaSupabaseDB {
   private isTableMissingError(error: any): boolean {
     if (!error) return false;
     const msg = error.message || "";
-    // Check for common "table not found" indicators from Supabase/PostgREST
     return (
       msg.includes("schema cache") || 
       msg.includes("does not exist") || 
@@ -19,6 +18,21 @@ export class KrishanaSupabaseDB {
     const { error } = await supabase.from('sessions').select('id').limit(1);
     if (error && this.isTableMissingError(error)) {
       throw new Error("TABLES_NOT_FOUND");
+    }
+  }
+
+  async getBranding(key: string): Promise<string | null> {
+    try {
+      const { data, error } = await supabase
+        .from('branding')
+        .select('value')
+        .eq('key', key)
+        .single();
+      
+      if (error) return null;
+      return data.value;
+    } catch (e) {
+      return null;
     }
   }
 
@@ -100,29 +114,10 @@ export class KrishanaSupabaseDB {
   }
 
   async deleteSession(id: string): Promise<void> {
-    // Explicitly delete messages first to avoid foreign key violations
     const { error: mError } = await supabase.from('messages').delete().eq('session_id', id);
-    if (mError) {
-      console.error("Supabase Error (deleteSession - messages):", mError.message);
-      throw mError;
-    }
-
+    if (mError) throw mError;
     const { error: sError } = await supabase.from('sessions').delete().eq('id', id);
-    if (sError) {
-      console.error("Supabase Error (deleteSession - session):", sError.message);
-      throw sError;
-    }
-  }
-
-  async clearSessionMessages(id: string): Promise<void> {
-    const { error } = await supabase.from('messages').delete().eq('session_id', id);
-    if (error) console.error("Supabase Error (clearSessionMessages):", error.message);
-  }
-
-  async clearAll(): Promise<void> {
-    const dummyId = '00000000-0000-0000-0000-000000000000';
-    await supabase.from('messages').delete().neq('id', dummyId);
-    await supabase.from('sessions').delete().neq('id', dummyId);
+    if (sError) throw sError;
   }
 
   async getProperties(): Promise<Property[]> {
@@ -132,10 +127,7 @@ export class KrishanaSupabaseDB {
       .order('country', { ascending: true });
     
     if (error) {
-      if (this.isTableMissingError(error)) {
-        throw new Error("TABLES_NOT_FOUND");
-      }
-      console.error("Property fetch error:", error.message);
+      if (this.isTableMissingError(error)) throw new Error("TABLES_NOT_FOUND");
       return [];
     }
     return data || [];
@@ -153,10 +145,7 @@ export class KrishanaSupabaseDB {
         last_chat_summary: chatSummary
       });
     
-    if (error) {
-      console.error("Lead save error:", error.message);
-      throw error;
-    }
+    if (error) throw error;
   }
 }
 
