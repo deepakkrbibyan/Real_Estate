@@ -20,7 +20,7 @@ export async function* sendMessageStream(
 
   // Create property context for the AI
   const propertyContext = properties.length > 0 
-    ? `\nCURRENT HOLDINGS ATLAS:\n${properties.map(p => `- ${p.name} in ${p.city}: ${p.currency} ${p.price.toLocaleString()} (${p.type})`).join('\n')}`
+    ? `\nCURRENT PROPERTIES ATLAS:\n${properties.map(p => `- ${p.name} in ${p.city}: ${p.currency} ${p.price.toLocaleString()} (${p.type})`).join('\n')}`
     : "";
 
   const systemInstruction = KRISHANA_BASE_INSTRUCTION + propertyContext;

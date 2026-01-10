@@ -36,6 +36,13 @@ export class KrishanaSupabaseDB {
     }
   }
 
+  async saveBranding(key: string, value: string): Promise<void> {
+    const { error } = await supabase
+      .from('branding')
+      .upsert({ key, value });
+    if (error) throw error;
+  }
+
   async getAllSessions(): Promise<ChatSession[]> {
     const { data, error } = await supabase
       .from('sessions')

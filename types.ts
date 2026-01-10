@@ -39,4 +39,4 @@ export interface CustomerLead {
 }
 
 export type AppMode = 'text' | 'voice';
-export type AppView = 'chat' | 'properties';
+export type AppView = 'chat' | 'properties' | 'branding';
